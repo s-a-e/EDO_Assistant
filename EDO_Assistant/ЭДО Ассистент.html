@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Руководство пользователя для программы ЭДО Ассистент</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+
+        h1, h2, h3 {
+            color: #333;
+        }
+
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        .note {
+            background-color: #e7f3fe;
+            border-left: 6px solid #2196F3;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Руководство пользователя для программы ЭДО Ассистент</h1>
+
+    <p>Это руководство поможет вам настроить и использовать программу <code>ЭДО Ассистент</code> для автоматизации загрузки файлов через браузер.</p>
+
+    <h2>Оглавление</h2>
+    <ul>
+        <li><a href="#config">Конфигурационный файл</a></li>
+        <li><a href="#xprintplus">Интеграция с xprint.PLUS</a></li>
+    </ul>
+
+
+    <h2 id="config">Конфигурационный файл</h2>
+
+    <p>Конфигурационный файл <code>config.txt</code> содержит настройки, необходимые для работы программы. Вот описание параметров:</p>
+
+    <ul>
+        <li><code>chromePath</code> — путь к исполняемому файлу браузера Chrome (необязательно, по умолчанию используется Edge).</li>
+        <li><code>userDataDir</code> — путь к папке с пользовательскими данными браузера. Это необходимо для использования существующего профиля браузера.</li>
+        <li><code>uploadRule</code> — правило загрузки файлов. Формат: <code>ИНН_отправителя,ИНН_получателя,путь_к_сайту</code>. Например:</li>
+        <pre><code>uploadRule=1234567890,0987654321,https://example.com/upload</code></pre>
+    </ul>
+
+    <h2 id="xprintplus">Интеграция с xprint.PLUS</h2>
+
+    <p>Программа может быть интегрирована с программой **Электронные документы - xprint.PLUS**. Она автоматически запускается при выгрузке документов в формате XML. Вот как это работает:</p>
+
+    <ol>
+        <li><strong>Настройка xprint.PLUS:</strong> Убедитесь, что в настройках xprint.PLUS включена опция ЭДО Ассистент.</li>
+        <li><strong>Автоматический запуск:</strong> При выгрузке документа в XML, программа автоматически запускается и обрабатывает файл. Она использует данные из XML (например, ИНН отправителя и получателя) для определения правил загрузки.</li>
+        <li><strong>Загрузка файла:</strong> Программа загружает файл на указанный в конфигурации URL, используя правила, заданные в <code>config.txt</code>.</li>
+    </ol>
+
+    <div class="note">
+        <p><strong>Примечание:</strong> Для корректной работы интеграции убедитесь, что программа располагается в папке "C:\EDO_Assistant", а также что конфигурационный файл <code>config.txt</code> содержит правильные данные.</p>
+    </div>
+
+
+</body>
+</html>

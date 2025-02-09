@@ -17,7 +17,7 @@ public class UploadRule
 class PlaywrightAssistant
 {
     // Поля для хранения настроек и состояния
-    private static bool _headless;
+    private static bool _headless, _saveMode;
     private string _chromePath;
     private static string _userDataDir;
     private static IBrowserContext _browser;
@@ -27,7 +27,7 @@ class PlaywrightAssistant
     static Dictionary<string, string> config;
 
     // Конструктор для инициализации настроек
-    public PlaywrightAssistant(bool headless)
+    public PlaywrightAssistant(bool headless, bool saveMode)
     {
         if (_headless != headless)
             if (_browser != null)
@@ -43,6 +43,7 @@ class PlaywrightAssistant
             }
 
         _headless = headless;
+        _saveMode = saveMode;
 
         if (_browser == null)
         {
@@ -55,10 +56,10 @@ class PlaywrightAssistant
             _userDataDir = config.ContainsKey("userDataDir") ? config["userDataDir"] : null;
 
             // Проверка наличия обязательных параметров
- /*           if (string.IsNullOrEmpty(_userDataDir))
-            {
-                throw new Exception("Не удалось прочитать userDataDir из config.txt.");
-            }*/
+            /*           if (string.IsNullOrEmpty(_userDataDir))
+                       {
+                           throw new Exception("Не удалось прочитать userDataDir из config.txt.");
+                       }*/
         }
     }
 
@@ -113,33 +114,35 @@ class PlaywrightAssistant
         // Чтение всех строк из файла
         string[] lines = File.ReadAllLines(configFilePath);
 
+        string _lastUploadUrl = null; // Сохраняем последний URL из uploadRule
         foreach (var line in lines)
         {
             // Удаление пробелов в начале и конце строки
             string trimmedLine = line.Trim();
 
             // Пропуск пустых строк и закомментированных строк
-            if (string.IsNullOrEmpty(trimmedLine) || trimmedLine.StartsWith("//"))
+            if (string.IsNullOrEmpty(trimmedLine) || trimmedLine.StartsWith(";"))
             {
                 continue;
             }
 
             // Обработка строк с uploadRule
-            if (trimmedLine.StartsWith("uploadRule="))
+            if (trimmedLine.StartsWith("uploadRule=") || trimmedLine.StartsWith("="))
             {
                 var parts = trimmedLine.Split(new[] { '=' }, 2);
                 if (parts.Length == 2)
                 {
                     var ruleParts = parts[1].Split(new[] { ',' }, 3);
-                    if (ruleParts.Length == 3)
+                    if (ruleParts.Length >= 2)
                     {
                         var rule = new UploadRule
                         {
                             SenderInn = ruleParts[0].Trim(),
                             ReceiverInn = ruleParts[1].Trim(),
-                            Url = ruleParts[2].Trim()
+                            Url = (ruleParts.Length == 3 ? ruleParts[2].Trim() : _lastUploadUrl)
                         };
                         rules.Add(rule);
+                        _lastUploadUrl = rule.Url;
                     }
                 }
             }
@@ -234,8 +237,25 @@ class PlaywrightAssistant
             Console.WriteLine("Playwright успешно завершён.");
         }
     }
-
+    readonly static string cfg = Environment.CurrentDirectory + "\\Config.txt";
+    static string clipboardText = "";
+    static void WorkerThread()
+    {
+        try
+        {
+            Process.Start("notepad.exe", cfg);
+            Console.WriteLine("config.txt открыт.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Не удалось открыть файл {cfg}: {ex.Message}");
+        }
+        // В этом потоке будет работать Clipboard
+        Clipboard.SetText(clipboardText);
+        Console.WriteLine($"{clipboardText} - текст скопирован в буфер обмена.\n");
+    }
     // Метод для выполнения основных операций на странице
+    static string lastSenderInn, lastReceiverInn;
     private async Task<int> PerformOperationsAsync(string filePath, string senderInn, string receiverInn)
     {
         // Чтение правил загрузки
@@ -246,23 +266,33 @@ class PlaywrightAssistant
 
         if (string.IsNullOrEmpty(operUrl))
         {
-            Console.WriteLine("!!!Не найдено подходящего правила загрузки для указанных ИНН.");
+            Console.Beep(1000, 500);
+            clipboardText = "=" + senderInn + "," + receiverInn;
+            Console.WriteLine("!!!Не найдено подходящего правила загрузки для указанных ИНН." +
+                $"\nОткройте файл {cfg} и вставьте правило:\n" +
+                clipboardText +
+                "\nв нужное место. Сохраните изменения и закройте config.txt.");
+
+            // Создаем новый поток с состоянием STA
+            Thread thread = new Thread(WorkerThread);
+            thread.SetApartmentState(ApartmentState.STA);  // Устанавливаем состояние STA
+            thread.Start();
             return 0;
         }
 #if !DEBUG
         if (operUrl.Contains("/f10d3327-d6c4-4cbc-b207-37506030b9e6/"))
         {
-            Console.WriteLine(@"!!!Откройте C:\EDO_Assistant\Config.txt и отредактируйте.");
+            Console.WriteLine($"!!!Откройте {cfg} и отредактируйте.");
             Console.WriteLine(@"!!!Замените /f10d3327-d6c4-4cbc-b207-37506030b9e6/ на свой ящик.");
 
             // Попытка открыть файл Config.txt в блокноте
             try
             {
-                Process.Start("notepad.exe", @"C:\EDO_Assistant\Config.txt");
+                Process.Start("notepad.exe", cfg);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Не удалось открыть файл Config.txt: {ex.Message}");
+                Console.WriteLine($"Не удалось открыть файл {cfg}: {ex.Message}");
             }
             await Task.Delay(5555); 
             // Завершение программы с кодом 0x100
@@ -272,8 +302,13 @@ class PlaywrightAssistant
         try
         {
             // Переход на указанный URL
-            //if (_page.Url != operUrl) //нельзя
-            await _page.GotoAsync(operUrl);
+            if (_saveMode)
+                    await _page.GotoAsync(operUrl);
+            else
+            {
+                if (_page.Url != operUrl) //нельзя???
+                    await _page.GotoAsync(operUrl);
+            }
 
             var authUrls = new HashSet<string> { "auth.kontur.ru", "identity.astral.ru", "sbis.ru/auth" };
             byte isBeepPlayed = 0; // Флаг для отслеживания воспроизведения звука
@@ -324,8 +359,20 @@ class PlaywrightAssistant
 
             }
 
-            if (_page.Url.Contains("kontur.ru"))
+            else if (_page.Url.Contains("kontur.ru"))
             {
+/*                if(lastSenderInn != null)
+                {
+                    if (lastSenderInn != senderInn || lastReceiverInn != receiverInn)
+                    {
+                        await ClickButtonAsync("Сохранить в черновиках");
+                        lastSenderInn = senderInn; lastReceiverInn = receiverInn;
+                    }
+                }
+                else
+                {
+                    lastSenderInn = senderInn; lastReceiverInn = receiverInn;
+                }*/
                 // Загрузка файла
                 await UploadFileAsync(filePath);
 
@@ -338,15 +385,14 @@ class PlaywrightAssistant
                 if (pageText.Contains("ошибк"))
                 {
                     Console.Beep(1000, 500);
-                    Console.WriteLine($"!!!Ошибки в: \n{filePath}");
+                    Console.WriteLine($"!!!Ошибки в документе.");
                     await Task.Delay(9999);
                 }
                 // Поиск и нажатие кнопки "Сохранить в черновиках"
-#if !DEBUG
-                await ClickButtonAsync("Сохранить в черновиках");
-#endif
+                if (_saveMode)
+                    await ClickButtonAsync("Сохранить в черновиках");
             }
-            if (_page.Url.Contains("astral.ru"))
+            else if (_page.Url.Contains("astral.ru"))
             {
                 // Загрузка файла
                 await UploadFileAsync(filePath);

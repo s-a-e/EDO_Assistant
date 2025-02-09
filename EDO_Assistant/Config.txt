@@ -1,29 +1,29 @@
-﻿// Конфигурация для "ЭДО Ассистент".
+﻿; Конфигурация для "ЭДО Ассистент".
 
-// Правила для загрузки документов
-// uploadRule=ИНН_отправителя,ИНН_получателя,Путь_к_сайту
-//
-// Загрузка в Диадок.
-// Измените ИД_ящика (f10d3327-d6c4-4cbc-b207-37506030b9e6) на свой, в зависимости от ИНН_отправителя (посмотрите в браузере) 
-uploadRule=*,*,https://diadoc.kontur.ru/f10d3327-d6c4-4cbc-b207-37506030b9e6/Folder/Send
-//uploadRule=9616919574,7802321298,https://diadoc.kontur.ru/f10d3327-d6c4-4cbc-b207-37506030b9e6/Folder/Send
-//
-// Загрузка в Астрал ЭДО. Рекомендуем использовать автоматическую загрузку через API: http://nextech.ru/Manual.cshtml#auto
-// Измените ИД_ящика (a73081d8-c19b-43b7-b9dc-a8715bcdd160) на свой, в зависимости от ИНН_отправителя (посмотрите в браузере) 
-//uploadRule=780226939681,*,https://doc.astral.ru/a73081d8-c19b-43b7-b9dc-a8715bcdd160/documents/outgoing
-//
-// Загрузка в Сбис. Нет возможности автоматического переключения отправителя. У других операторов есть ИД_ящика
-// Рекомендуем использовать автоматическую загрузку через API.
-uploadRule=*,*,https://docs.saby.ru/page/docs-saby-outgoing
-// Демо СБИС
-//uploadRule=*,*,https://docs.sabyd.ru/page/docs-saby-outgoing
+; Правила для загрузки документов
+; uploadRule=ИНН_отправителя,ИНН_получателя,Путь_к_сайту
+
+; Загрузка в Диадок.
+; Измените ИД_ящика (f10d3327-d6c4-4cbc-b207-37506030b9e6) на свой, в зависимости от ИНН_отправителя (посмотрите в браузере) 
+uploadRule=000,*,https://diadoc.kontur.ru/f10d3327-d6c4-4cbc-b207-37506030b9e6/Folder/Send
+=9616919574,7802321298
+
+; Загрузка в Астрал ЭДО. Рекомендуем использовать автоматическую загрузку через API: http://nextech.ru/Manual.cshtml#auto
+; Измените ИД_ящика (a73081d8-c19b-43b7-b9dc-a8715bcdd160) на свой, в зависимости от ИНН_отправителя (посмотрите в браузере) 
+;uploadRule=780226939681,*,https://doc.astral.ru/a73081d8-c19b-43b7-b9dc-a8715bcdd160/documents/outgoing
+
+; Загрузка в Сбис. Нет возможности автоматического переключения отправителя. У других операторов есть ИД_ящика
+; Рекомендуем использовать автоматическую загрузку через API.
+;uploadRule=*,*,https://docs.saby.ru/page/docs-saby-outgoing
+; Демо СБИС
+;uploadRule=*,*,https://docs.sabyd.ru/page/docs-saby-outgoing
 
 
-// Режим запуска браузера. Закомментируйте, если нужен обычный режим.
-//headless=true
+; Режим запуска браузера. Закомментируйте, если нужен обычный режим.
+;headless=true
 
-// Путь для Google Chrome. Иначе EDGE. 
-//chromePath=C:\Program Files\Google\Chrome\Application\chrome.exe
+; Путь для Google Chrome. Иначе EDGE. 
+;chromePath=C:\Program Files\Google\Chrome\Application\chrome.exe
 
-// Папка для сохранения данных профиля пользователя для браузера. Иначе C:\Users\ИМЯ\AppData\Local\EDO_Assistant\browserProfile
-//userDataDir=C:\EDO_Assistant\browserProfile
+; Папка для сохранения данных профиля пользователя для браузера. Иначе C:\Users\ИМЯ\AppData\Local\EDO_Assistant\browserProfile
+;userDataDir=C:\EDO_Assistant\browserProfile

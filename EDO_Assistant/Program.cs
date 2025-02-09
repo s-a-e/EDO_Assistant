@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 class Program
 {
-    static bool headless = false;
+    static bool headless, saveMode;
 
     private static ConcurrentQueue<string[]> _tasksQueue = new ConcurrentQueue<string[]>();
     private static bool _isRunning = true;
@@ -20,6 +20,7 @@ class Program
         Console.WriteLine("ЭДО ассистент версия 1.1. Ожидание подключения...");
         Console.WriteLine("Доступные команды:");
         Console.WriteLine("  x - Переключить режим браузера (Headless/Обычный)");
+        Console.WriteLine("  s - Сохранять в черновиках/не сохранять");
         Console.WriteLine();
 
         // Получение параметров из конфигурации
@@ -51,6 +52,11 @@ class Program
                     {
                         headless = !headless;
                         Console.WriteLine($"\nБраузер будет переключен в режим: {(headless ? "Headless" : "Обычный")}");
+                    }
+                    else if (keyChar == 's' || keyChar == 'ы')
+                    {
+                        saveMode = !saveMode;
+                        Console.WriteLine($"\nРежим сохранения в черновики: {(saveMode ? "Включен" : "Отключен")}");
                     }
                 }
                 // Очищаем буфер ввода (все нажатые клавиши)
@@ -142,7 +148,7 @@ class Program
                     Console.WriteLine($"ИНН покупателя: {buyerINN}");
 
                     // Создание экземпляра класса
-                    assistant = new PlaywrightAssistant(headless);
+                    assistant = new PlaywrightAssistant(headless, saveMode );
 
                     await assistant.RunAsync(
                         fullName,

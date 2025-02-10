@@ -302,12 +302,9 @@ class PlaywrightAssistant
         try
         {
             // Переход на указанный URL
-            if (_saveMode)
-                    await _page.GotoAsync(operUrl);
-            else
+            if (_saveMode || _page.Url != operUrl)
             {
-                if (_page.Url != operUrl) //нельзя???
-                    await _page.GotoAsync(operUrl);
+                await _page.GotoAsync(operUrl);
             }
 
             var authUrls = new HashSet<string> { "auth.kontur.ru", "identity.astral.ru", "sbis.ru/auth" };
@@ -332,79 +329,108 @@ class PlaywrightAssistant
                 Console.WriteLine(operUrl);
             }
 
+            // Обработка различных доменов
             if (_page.Url.Contains("saby.ru") || _page.Url.Contains("sabyd.ru"))
             {
-                var fileInput = await _page.QuerySelectorAsync("input[type='file']");
-                if (fileInput == null)
-                {
-                    // Нажатие на элемент с текстом "Загрузить"
-                    await _page.ClickAsync("text=Загрузить");
-                    await WaitForTextAsync("С компьютера");
-                    await _page.ClickAsync("text=С компьютера");
-                    await Task.Delay(555);
-                    // Отправляем клавишу ESC
-                    SendKeys.SendWait("{ESC}");
-                    await Task.Delay(555);
-                }
-                // Загрузка файла
-                await UploadFileAsync(filePath);
-
-                await WaitForTextAsync("Добавить");
-                await WaitForTextAsync("Добавить");
-                await WaitForTextAsync("Добавить");
-                //await Task.Delay(9999);
-                //await _page.ClickAsync("title=\"Отправить\"");
-                await _page.WaitForSelectorAsync("span[data-qa='edo3-ReadOnlyStateTemplate__saveButton']", new PageWaitForSelectorOptions { State = WaitForSelectorState.Visible });
-                await _page.ClickAsync("span[data-qa='edo3-ReadOnlyStateTemplate__saveButton']");
-
+                await HandleSabyDomainAsync(filePath);
             }
-
             else if (_page.Url.Contains("kontur.ru"))
             {
-/*                if(lastSenderInn != null)
-                {
-                    if (lastSenderInn != senderInn || lastReceiverInn != receiverInn)
-                    {
-                        await ClickButtonAsync("Сохранить в черновиках");
-                        lastSenderInn = senderInn; lastReceiverInn = receiverInn;
-                    }
-                }
-                else
-                {
-                    lastSenderInn = senderInn; lastReceiverInn = receiverInn;
-                }*/
-                // Загрузка файла
-                await UploadFileAsync(filePath);
-
-                // Ожидание появления текста "Объединить"
-                await WaitForTextAsync("Объединить ");
-
-                // Получение всего текста на странице
-                string pageText = await _page.TextContentAsync("body");
-                // Проверка наличия текста "Ошибка"
-                if (pageText.Contains("ошибк"))
-                {
-                    Console.Beep(1000, 500);
-                    Console.WriteLine($"!!!Ошибки в документе.");
-                    await Task.Delay(9999);
-                }
-                // Поиск и нажатие кнопки "Сохранить в черновиках"
-                if (_saveMode)
-                    await ClickButtonAsync("Сохранить в черновиках");
+                await HandleKonturDomainAsync(filePath, receiverInn);
             }
             else if (_page.Url.Contains("astral.ru"))
             {
-                // Загрузка файла
                 await UploadFileAsync(filePath);
             }
         }
         catch (Exception ex)
         {
-            // Обработка исключений
             Console.WriteLine($"Произошла ошибка: {ex.Message}");
             Console.Beep(1000, 500);
         }
         return 0;
+    }
+
+    private async Task HandleSabyDomainAsync(string filePath)
+    {
+        var fileInput = await _page.QuerySelectorAsync("input[type='file']");
+        if (fileInput == null)
+        {
+            await _page.ClickAsync("text=Загрузить");
+            await WaitForTextAsync("С компьютера");
+            await _page.ClickAsync("text=С компьютера");
+            await Task.Delay(555);
+            SendKeys.SendWait("{ESC}");
+            await Task.Delay(555);
+        }
+        await UploadFileAsync(filePath);
+
+        await WaitForTextAsync("Добавить");
+        await WaitForTextAsync("Добавить");
+        await WaitForTextAsync("Добавить");
+
+        await _page.WaitForSelectorAsync("span[data-qa='edo3-ReadOnlyStateTemplate__saveButton']", new PageWaitForSelectorOptions { State = WaitForSelectorState.Visible });
+        await _page.ClickAsync("span[data-qa='edo3-ReadOnlyStateTemplate__saveButton']");
+    }
+
+    private async Task HandleKonturDomainAsync(string filePath, string INN)
+    {
+        /*                if(lastSenderInn != null)
+                     {
+                         if (lastSenderInn != senderInn || lastReceiverInn != receiverInn)
+                         {
+                             await ClickButtonAsync("Сохранить в черновиках");
+                             lastSenderInn = senderInn; lastReceiverInn = receiverInn;
+                         }
+                     }
+                     else
+                     {
+                         lastSenderInn = senderInn; lastReceiverInn = receiverInn;
+                     }*/
+
+        // Загрузка файла
+        await UploadFileAsync(filePath);
+
+        await WaitForTextAsync("Комментарий");
+
+        string pageText = await _page.TextContentAsync("body");
+        if (pageText.Contains("ошибк"))
+        {
+            Console.Beep(1000, 500);
+            Console.WriteLine($"!!!Ошибки в документе.");
+            await Task.Delay(9999);
+        }
+
+/*        if (!filePath.EndsWith(".xml"))
+        {
+
+            var hiddenInput = await _page.QuerySelectorAsync("input[type='hidden']");
+            if (hiddenInput != null)
+            {
+                // Делаем элемент видимым с помощью JS
+                await hiddenInput.EvaluateAsync("element => element.style.display = 'block'");
+            }
+            // Дожидаемся появления элемента с placeholder 'Вводите название или ИНН контрагента'
+            await _page.WaitForSelectorAsync("input[placeholder='Вводите название или ИНН контрагента']");
+
+            // Находим элемент
+            var inputElement = await _page.QuerySelectorAsync("input[placeholder='Вводите название или ИНН контрагента']");
+
+            if (inputElement != null)
+            {
+                // Устанавливаем фокус на поле
+                await inputElement.FocusAsync();
+
+                // Вводим ИНН (или любое другое значение)
+                await inputElement.FillAsync("1234567890");  // Замени на нужный ИНН
+
+                // Нажимаем Enter
+                await inputElement.PressAsync("Enter");
+            }
+        }*/
+        if (_saveMode)
+            // Поиск и нажатие кнопки "Сохранить в черновиках"
+            await ClickButtonAsync("Сохранить в черновиках");
     }
 
     private string GetUrlFromRules(List<UploadRule> rules, string senderInn, string receiverInn)
@@ -519,4 +545,3 @@ class PlaywrightAssistant
         Console.WriteLine($"Кнопка с текстом '{buttonText}' не найдена.");
     }
 }
-

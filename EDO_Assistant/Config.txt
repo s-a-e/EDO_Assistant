@@ -5,7 +5,7 @@
 
 ; Загрузка в Диадок.
 ; Измените ИД_ящика (f10d3327-d6c4-4cbc-b207-37506030b9e6) на свой, в зависимости от ИНН_отправителя (посмотрите в браузере) 
-uploadRule=000,*,https://diadoc.kontur.ru/f10d3327-d6c4-4cbc-b207-37506030b9e6/Folder/Send
+uploadRule=*,*,https://diadoc.kontur.ru/f10d3327-d6c4-4cbc-b207-37506030b9e6/Folder/Send
 =9616919574,7802321298
 
 ; Загрузка в Астрал ЭДО. Рекомендуем использовать автоматическую загрузку через API: http://nextech.ru/Manual.cshtml#auto
@@ -21,6 +21,8 @@ uploadRule=000,*,https://diadoc.kontur.ru/f10d3327-d6c4-4cbc-b207-37506030b9e6/F
 
 ; Режим запуска браузера. Закомментируйте, если нужен обычный режим.
 ;headless=true
+; Сохранять в черновиках. Закомментируйте, если не нужно.
+;saveDraft=true
 
 ; Путь для Google Chrome. Иначе EDGE. 
 ;chromePath=C:\Program Files\Google\Chrome\Application\chrome.exe

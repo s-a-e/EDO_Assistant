@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+
+<head>
+    <link rel="stylesheet"
+        type="text/css"
+        href="./style.css">
+</head>
+
+<body>
+    <div id="sabyContainer"
+        class="isHidden">
+        <div class="SabyExt-Header">Сетевые запросы</div>
+        <div id="startRecordBtn"
+            class="SabyExt-Button SabyExt-Button_outline">
+            <span class="SabyExt-Button__recordEl"></span>
+            <span id="recBtn__caption"
+                class="SabyExt-Button__caption">Начать запись</span>
+        </div>
+        <div id="stopRecordBtn"
+            class="SabyExt-Button SabyExt-Button_outline isHidden">
+            <span class="SabyExt-Icon SabyExt-Icon_color-danger"></span>
+            <span class="SabyExt-Button__caption">Остановить запись</span>
+        </div>
+
+        <div class="SabyExt-Separator"></div>
+
+        <div id="fileContainer"
+            class="SabyExt-HiddenContainer isHidden">
+            <div>Файл</div>
+            <div id="filenameCaption"
+                class="fileContainer__caption"></div>
+        </div>
+
+        <div id="progressContainer"
+            class="SabyExt-HiddenContainer isHidden">
+            <span>Отправка: </span>
+            <span id="progressCaption"></span>
+            <span>%</span>
+        </div>
+
+        <div id="incidentContainer"
+            class="SabyExt-HiddenContainer isHidden">
+            <div>Номер инцидента</div>
+            <div id="incidentNumber"></div>
+        </div>
+
+        <div id="errorContainer"
+            class="SabyExt-HiddenContainer isHidden"></div>
+
+        <div class="SabyExt-ActionContainer">
+            <div id="uploadBtn"
+                class="SabyExt-Button SabyExt-Button_shadow"
+                title="Отправить в облако">
+                <span class="SabyExt-Icon"></span>
+            </div>
+            <div style="width: 25px;"></div>
+            <div id="downloadBtn"
+                class="SabyExt-Button SabyExt-Button_shadow"
+                title="Сохранить">
+                <span class="SabyExt-Icon"></span>
+            </div>
+        </div>
+    </div>
+    <div id="foreignContainer"
+        class="isHidden">
+        <div class="text-secondary">Доступно только на ресурсах системы СБИС</div>
+    </div>
+</body>
+<script src="./popupScript.js"></script>
+
+</html>

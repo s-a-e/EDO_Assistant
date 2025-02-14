@@ -1,0 +1,1 @@
+window.sbisPluginExtensionInfo=!0;

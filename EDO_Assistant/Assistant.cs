@@ -17,7 +17,7 @@ public class UploadRule
 class PlaywrightAssistant
 {
     // Поля для хранения настроек и состояния
-    private static bool _headless, _saveMode;
+    private static bool _headless, _saveMode, _autoFillNonXml;
     private string _chromePath;
     private static string _userDataDir;
     private static IBrowserContext _browser;
@@ -27,7 +27,7 @@ class PlaywrightAssistant
     static Dictionary<string, string> config;
 
     // Конструктор для инициализации настроек
-    public PlaywrightAssistant(bool headless, bool saveMode)
+    public PlaywrightAssistant(bool headless, bool saveMode, bool autoFillNonXml)
     {
         if (_headless != headless)
             if (_browser != null)
@@ -44,6 +44,7 @@ class PlaywrightAssistant
 
         _headless = headless;
         _saveMode = saveMode;
+        _autoFillNonXml = autoFillNonXml;
 
         if (_browser == null)
         {
@@ -53,13 +54,8 @@ class PlaywrightAssistant
 
             // Получение параметров из конфигурации
             _chromePath = config.ContainsKey("chromePath") ? config["chromePath"] : null;
-            _userDataDir = config.ContainsKey("userDataDir") ? config["userDataDir"] : null;
+           // _userDataDir = config.ContainsKey("userDataDir") ? config["userDataDir"] : null;
 
-            // Проверка наличия обязательных параметров
-            /*           if (string.IsNullOrEmpty(_userDataDir))
-                       {
-                           throw new Exception("Не удалось прочитать userDataDir из config.txt.");
-                       }*/
         }
     }
 
@@ -210,13 +206,20 @@ class PlaywrightAssistant
             }
         }
 
+        var extensionPath1 = @"C:\EDO_Assistant\browserExtensions\Kontur"; // Путь к распакованному расширению
+        var extensionPath2 = @"C:\EDO_Assistant\browserExtensions\Sbis"; // Путь к распакованному расширению
         // Запуск браузера с использованием пользовательского профиля
         _browser = await _playwright.Chromium.LaunchPersistentContextAsync(_userDataDir, new BrowserTypeLaunchPersistentContextOptions
         {
-            //            ExecutablePath = _chromePath, // Указываем путь к Chrome
+            ExecutablePath = _chromePath, // Указываем путь к Chrome, если _chromePath не null
             Headless = _headless, // Режим запуска браузера
-            Channel = "msedge", // Использование Edge вместо Chromium
-            //Args = new[] { "--window-position=0,0 --window-size=1,1" }, // Дополнительные аргументы
+            Channel = _chromePath == null ? "msedge" : null, // Используем Edge, если _chromePath равен null
+#if !DEBUG
+            Args = new[] {
+                $"--disable-extensions-except={extensionPath1},{extensionPath2}",
+                $"--load-extension={extensionPath1},{extensionPath2}"
+            }
+#endif
         });
 
         Console.WriteLine("Браузер успешно инициализирован.");
@@ -332,7 +335,7 @@ class PlaywrightAssistant
             // Обработка различных доменов
             if (_page.Url.Contains("saby.ru") || _page.Url.Contains("sabyd.ru"))
             {
-                await HandleSabyDomainAsync(filePath);
+                await HandleSabyDomainAsync(filePath, receiverInn);
             }
             else if (_page.Url.Contains("kontur.ru"))
             {
@@ -351,12 +354,42 @@ class PlaywrightAssistant
         return 0;
     }
 
-    private async Task HandleSabyDomainAsync(string filePath)
+    /*<div class="controls-Render__wrapper"><span class="controls-Render__baseline">﻿</span><div data-qa="controls-Render__field" class="controls-InputBase__field controls-InputBase__field_margin-null controls-InputBase__field_theme_default_margin-null controls-Lookup__fieldWrapper controls-Lookup__fieldWrapper_content_width_default
+
+
+
+     controls-Lookup__fieldWrapper_style-info"><input name="ws-input_2025-02-11" spellcheck="true" type="text" inputmode="text" autocorrect="off" autocapitalize="on" autocomplete="off" class="controls-Field js-controls-Field controls-InputBase__nativeField controls-InputBase__nativeField_caretEmpty controls-InputBase__nativeField_caretEmpty_theme_default" tabindex="0" value=""><div class="controls-InputBase__placeholder controls-InputBase__placeholder_displayed-undefined-caret"><div class="controls-Render__placeholder controls-Render__placeholder_overflow"><div tabindex="0" class="addressee-Lookup__placeholder ws-flexbox ws-flex-row controls-Lookup__placeholder_style-info"><div class="controls-Render__placeholder_overflow">Укажите получателя</div></div></div></div><div class="controls-InputBase__forCalc"></div></div><div tabindex="0" class="controls-Lookup__rightFieldWrapper controls-Lookup__rightFieldWrapper_singleLine controls-Render__afterField"><invisible-node tabindex="-1" class="ws-hidden"></invisible-node><svg data-qa="Lookup__showSelector" class="controls-icon_svg controls-icon_size-s controls-Lookup__showSelector
+                          controls-Lookup__showSelector_singleLine
+                          controls_lookup_theme-default
+                          controls-Lookup__icon controls-icon
+                          controls-Lookup__showSelector_horizontalPadding-null" fill-rule="evenodd"><use xlink:href="/static/resources/Controls-icons/common.svg? x_module = fa53816b4b206e60c934bcc042e404e1#icon-Burger"></use></svg></div></div>
+    */
+
+    private async Task HandleSabyDomainAsync(string filePath, string INN)
     {
         var fileInput = await _page.QuerySelectorAsync("input[type='file']");
         if (fileInput == null)
         {
-            await _page.ClickAsync("text=Загрузить");
+
+            /*            // Ожидаем появления элемента <span> с текстом "Загрузить" или "Добавить"
+                        await page.waitForSelector('span.controls-BaseButton__text');
+                        // Получаем текст из элемента <span>
+                        const spanText = await page.textContent('span.controls-BaseButton__text');*/
+
+            var buttonText = await _page.TextContentAsync("span:has-text('Загрузить'), span:has-text('Добавить')");
+
+            // Проверяем, что за текст в кнопке
+            if (buttonText == "Загрузить")
+                await _page.ClickAsync("text=Загрузить");
+            else if (buttonText == "Добавить")
+                await _page.ClickAsync("text=Добавить");
+            else
+            {
+                Console.Beep(1000, 500);
+                Console.Beep(1000, 500);
+                Console.WriteLine($"!!!Обновите программу.");
+            }
+
             await WaitForTextAsync("С компьютера");
             await _page.ClickAsync("text=С компьютера");
             await Task.Delay(555);
@@ -368,11 +401,34 @@ class PlaywrightAssistant
         await WaitForTextAsync("Добавить");
         await WaitForTextAsync("Добавить");
         await WaitForTextAsync("Добавить");
+        await WaitForTextAsync("Добавить");
+        await WaitForTextAsync("Добавить");
+        await WaitForTextAsync("Добавить");
+        await WaitForTextAsync("Добавить");
 
-        await _page.WaitForSelectorAsync("span[data-qa='edo3-ReadOnlyStateTemplate__saveButton']", new PageWaitForSelectorOptions { State = WaitForSelectorState.Visible });
-        await _page.ClickAsync("span[data-qa='edo3-ReadOnlyStateTemplate__saveButton']");
+        if (_autoFillNonXml && !filePath.EndsWith(".xml"))
+        {
+            var inputElement = await _page.QuerySelectorAsync("text=Укажите получателя");
+            if (inputElement != null)
+            {
+                await _page.WaitForSelectorAsync("text='Укажите получателя'");
+                await _page.FillAsync("input[type='text']", INN);
+                await Task.Delay(555);
+                await _page.ClickAsync("div[data-qa='crm_ClientMainInfo__name']");
+            }
+        }
+
+        if (_saveMode)
+        {
+            await _page.WaitForSelectorAsync("span[data-qa='edo3-ReadOnlyStateTemplate__saveButton']", new PageWaitForSelectorOptions { State = WaitForSelectorState.Visible });
+            await _page.ClickAsync("span[data-qa='edo3-ReadOnlyStateTemplate__saveButton']");
+        }
     }
 
+    //До нажатия на CounteragentsSearch:
+    //<div tid="CounteragentsSearch"><span><span data-tid="ComboBoxView__root" class="react-ui-1ofblmi" style="width: 100%;"><span data-tid="InputLikeText__root" aria-controls="ComboBoxView__menu03d07700a4fa7" class="react-ui-g995bx" tabindex="0" style="width: 100%;"><input data-tid="InputLikeText__nativeInput" type="hidden" value=""><span class="react-ui-1uzh48y"><span data-tid="InputLikeText__input" class="react-ui-mtea40"></span><span class="react-ui-1iiuisf">Вводите название или ИНН контрагента</span></span><span class="react-ui-xzqvt8"><span class="react-ui-yp8cqa"><span class="react-ui-1xkfc81"><span class="react-ui-11i844s"><svg viewBox="0 0 16 16" class="react-ui-8nmv89" fill="currentColor" focusable="false" aria-hidden="true" style="margin-bottom: -0.1875em;"><path fill-rule="evenodd" clip-rule="evenodd" d="M8 9.00098L11.001 6C11.3747 6 11.6322 6.10937 11.7734 6.32812C11.9147 6.54688 11.9899 6.73828 11.999 6.90234V6.99805L8 10.9971L4.00098 6.99805V6.88867C4.03744 6.51953 4.20833 6.25977 4.51367 6.10938C4.65039 6.03646 4.81217 6 4.99902 6L8 9.00098Z"></path></svg></span></span></span></span></span></span></span></div>
+    //После:
+    //<div tid="CounteragentsSearch"><span><span data-tid="ComboBoxView__root" class="react-ui-1ofblmi" style="width: 100%;"><label data-tid="Input__root" class="react-ui-cwpcz5" aria-controls="ComboBoxView__menud8d6dd8560814" style="width: 100%;"><span class="react-ui-1dz8sqb"></span><span class="react-ui-1uzh48y"><input class="react-ui-1b99p38" type="text" placeholder="Вводите название или ИНН контрагента" value=""></span><span class="react-ui-xzqvt8"><span class="react-ui-1g0duzl"><span class="react-ui-1xkfc81"><span class="react-ui-11i844s"><svg viewBox="0 0 16 16" class="react-ui-8nmv89" fill="currentColor" focusable="false" aria-hidden="true" style="margin-bottom: -0.1875em;"><path fill-rule="evenodd" clip-rule="evenodd" d="M8 9.00098L11.001 6C11.3747 6 11.6322 6.10937 11.7734 6.32812C11.9147 6.54688 11.9899 6.73828 11.999 6.90234V6.99805L8 10.9971L4.00098 6.99805V6.88867C4.03744 6.51953 4.20833 6.25977 4.51367 6.10938C4.65039 6.03646 4.81217 6 4.99902 6L8 9.00098Z"></path></svg></span></span></span></span></label><noscript data-render-container-id="e92523b39d0b7"></noscript></span></span><noscript data-render-container-id="d40cab0a5129e"></noscript></div>
     private async Task HandleKonturDomainAsync(string filePath, string INN)
     {
         /*                if(lastSenderInn != null)
@@ -400,34 +456,57 @@ class PlaywrightAssistant
             Console.WriteLine($"!!!Ошибки в документе.");
             await Task.Delay(9999);
         }
-
-/*        if (!filePath.EndsWith(".xml"))
+        if (_autoFillNonXml && !filePath.EndsWith(".xml"))
         {
-
-            var hiddenInput = await _page.QuerySelectorAsync("input[type='hidden']");
-            if (hiddenInput != null)
-            {
-                // Делаем элемент видимым с помощью JS
-                await hiddenInput.EvaluateAsync("element => element.style.display = 'block'");
-            }
-            // Дожидаемся появления элемента с placeholder 'Вводите название или ИНН контрагента'
-            await _page.WaitForSelectorAsync("input[placeholder='Вводите название или ИНН контрагента']");
-
-            // Находим элемент
             var inputElement = await _page.QuerySelectorAsync("input[placeholder='Вводите название или ИНН контрагента']");
-
-            if (inputElement != null)
+            if (inputElement == null)
             {
-                // Устанавливаем фокус на поле
-                await inputElement.FocusAsync();
+                // Ожидаем появления элемента по тексту
+                await _page.WaitForSelectorAsync("xpath=//span[contains(text(), 'Запросить подпись контрагента для всех документов')]");
+                // Находим элемент по тексту с помощью XPath
+                var spanElement = await _page.QuerySelectorAsync("xpath=//span[contains(text(), 'Запросить подпись контрагента для всех документов')]");
+                if (spanElement != null)
+                {
+                    // Кликаем по элементу
+                    await spanElement.ClickAsync();
+                }
 
-                // Вводим ИНН (или любое другое значение)
-                await inputElement.FillAsync("1234567890");  // Замени на нужный ИНН
+                // Ожидаем появления элемента, по которому нужно кликнуть
+                await _page.WaitForSelectorAsync("div[tid='CounteragentsSearch']");
 
-                // Нажимаем Enter
-                await inputElement.PressAsync("Enter");
+                // Находим элемент, по которому нужно кликнуть
+                var clickableElement = await _page.QuerySelectorAsync("div[tid='CounteragentsSearch']");
+                if (clickableElement != null)
+                {
+                    // Кликаем по элементу
+                    await clickableElement.ClickAsync();
+
+                    // Дожидаемся появления элемента с placeholder 'Вводите название или ИНН контрагента'
+                    await _page.WaitForSelectorAsync("input[placeholder='Вводите название или ИНН контрагента']");
+
+                    // Находим элемент
+                    inputElement = await _page.QuerySelectorAsync("input[placeholder='Вводите название или ИНН контрагента']");
+
+                    if (inputElement != null)
+                    {
+                        // Получаем значение атрибута "value"
+                        var value = await inputElement.EvaluateAsync<string>("element => element.value");
+
+                        // Проверяем, что значение пустое
+                        if (string.IsNullOrEmpty(value))
+                        {
+                            // Устанавливаем фокус на поле
+                            await inputElement.FocusAsync();
+
+                            // Вводим ИНН (или любое другое значение)
+                            await inputElement.FillAsync(INN);  // Замени на нужный ИНН
+                            await Task.Delay(555);
+                            await inputElement.PressAsync("Enter");
+                        }
+                    }
+                }
             }
-        }*/
+        }
         if (_saveMode)
             // Поиск и нажатие кнопки "Сохранить в черновиках"
             await ClickButtonAsync("Сохранить в черновиках");

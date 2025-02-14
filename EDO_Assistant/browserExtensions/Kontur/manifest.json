@@ -1,0 +1,26 @@
+{
+   "background": {
+      "service_worker": "background.js"
+   },
+   "content_scripts": [ {
+      "all_frames": true,
+      "js": [ "content.js" ],
+      "match_about_blank": true,
+      "match_origin_as_fallback": true,
+      "matches": [ "*://*/*" ],
+      "run_at": "document_start"
+   } ],
+   "description": "Расширение браузера, выполняющее криптографические операции в сервисах СКБ Контур",
+   "host_permissions": [ "*://*/*" ],
+   "icons": {
+      "128": "icon128.png",
+      "16": "icon16.png",
+      "48": "icon48.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmdChbpnpPoqHEsM00sonoW/Ue/FwDU7DjXUWKfIfP4D8KGOZht76ECTI7zNXNBCBg9roLEyR6cwKSZmla2g9BSgrR274dthNh5SREt6hid9OhNq5cAF5kfUFICJ4NcYDV7/Ujq5JlrPlMVFblb9q0XNzZjidtEaFm2zgbeVJGWJynfFsencaOc32cJYVMZlBQnJSKv0XZ1IPpdiU2OIOIFPgaO5e6Iv87n1xE/6w2RM2ko0LxA6aEoXh+ogMIf0yFhS5PTOQcHUqD+QGapKIc3YghaxQTA3h8qeXZC33qmlhj6QLCPO52q0FQAltc3i5XR0hnBzKtPzvBN+nnFbGAQIDAQAB",
+   "manifest_version": 3,
+   "name": "Контур.Плагин",
+   "permissions": [ "nativeMessaging", "tabs", "scripting" ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "3.1.7"
+}

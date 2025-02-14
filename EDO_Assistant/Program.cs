@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 class Program
 {
-    static bool headless = false, saveDraft = false;
+    static bool headless = false, saveDraft = false, autoFillNonXml = false;
 
     private static ConcurrentQueue<string[]> _tasksQueue = new ConcurrentQueue<string[]>();
     private static bool _isRunning = true;
@@ -17,6 +17,7 @@ class Program
         var config = PlaywrightAssistant.ReadConfig();
         headless = config.ContainsKey("headless") ? bool.Parse(config["headless"]) : false;
         saveDraft = config.ContainsKey("saveDraft") ? bool.Parse(config["saveDraft"]) : false;
+        autoFillNonXml = config.ContainsKey("autoFillNonXml") ? bool.Parse(config["autoFillNonXml"]) : false;
 
 #if DEBUG
         Console.WriteLine("!!!Тестовая версия!!!! ");
@@ -54,10 +55,11 @@ class Program
 
     private static void DisplaySettings()
     {
-        Console.WriteLine("ЭДО ассистент версия 1.1. Ожидание подключения...");
+        Console.WriteLine("ЭДО ассистент версия 1.3. Ожидание подключения...");
         Console.WriteLine("Доступные команды:");
         Console.WriteLine($"  x - Переключить режим браузера (Headless/Обычный) (Текущий: {(headless ? "Headless" : "Обычный")})");
         Console.WriteLine($"  s - Сохранять в черновиках/не сохранять (Текущий: {(saveDraft ? "Сохранять" : "Не сохранять")})");
+        Console.WriteLine($"  n - Заполнение поля КА для не-XML документов (Текущий: {(autoFillNonXml ? "Включено" : "Отключено")})");
         Console.WriteLine();
     }
 
@@ -72,6 +74,11 @@ class Program
         {
             saveDraft = !saveDraft;
             Console.WriteLine($"\nРежим сохранения в черновики: {(saveDraft ? "Включен" : "Отключен")}");
+        }
+        else if (keyChar == 'n' || keyChar == 'т')
+        {
+            autoFillNonXml = !autoFillNonXml;
+            Console.WriteLine($"\nЗаполнение поля КА для не-XML документов: {(autoFillNonXml ? "Включено" : "Отключено")}");
         }
     }
 
@@ -136,8 +143,7 @@ class Program
                     Console.WriteLine($"ИНН покупателя: {buyerINN}");
 
                     // Создание экземпляра класса
-
-                    assistant = new PlaywrightAssistant(headless, saveDraft);
+                    assistant = new PlaywrightAssistant(headless, saveDraft, autoFillNonXml);
 
                     await assistant.RunAsync(fullName, sellerINN, buyerINN).ConfigureAwait(false);
 

@@ -55,7 +55,7 @@ class Program
 
     private static void DisplaySettings()
     {
-        Console.WriteLine("ЭДО ассистент версия 1.3. Ожидание подключения...");
+        Console.WriteLine("ЭДО ассистент версия 1.5. Ожидание подключения...");
         Console.WriteLine("Доступные команды:");
         Console.WriteLine($"  x - Переключить режим браузера (Headless/Обычный) (Текущий: {(headless ? "Headless" : "Обычный")})");
         Console.WriteLine($"  s - Сохранять в черновиках/не сохранять (Текущий: {(saveDraft ? "Сохранять" : "Не сохранять")})");

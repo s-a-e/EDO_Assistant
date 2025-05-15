@@ -2,22 +2,23 @@
 
 ; Правила для загрузки документов
 ; uploadRule=ИНН_отправителя,ИНН_получателя,Путь_к_сайту
+; Далее можно сократить до "=ИНН_отправителя,ИНН_получателя" Пример:
+; =9616919574,7802321298
+
+; Загрузка в Сбис. 
+;uploadRule=780226939681,*,https://docs.saby.ru
+uploadRule=*,*,https://docs.saby.ru
 
 ; Загрузка в Диадок.
 ; Измените ИД_ящика (f10d3327-d6c4-4cbc-b207-37506030b9e6) на свой, в зависимости от ИНН_отправителя (посмотрите в браузере) 
-uploadRule=*,*,https://diadoc.kontur.ru/f10d3327-d6c4-4cbc-b207-37506030b9e6/Folder/Send
-;uploadRule=*,*,https://diadoc.kontur.ru/9ab495ae-c4f4-4ebb-854f-4f901ad26d01/Folder/Send
+;uploadRule=*,*,https://diadoc.kontur.ru/f10d3327-d6c4-4cbc-b207-37506030b9e6/Folder/Send
+uploadRule=*,*,https://diadoc.kontur.ru/9ab495ae-c4f4-4ebb-854f-4f901ad26d01/Folder/Send
 ;=9616919574,7802321298
 
 ; Загрузка в Астрал ЭДО. Рекомендуем использовать автоматическую загрузку через API: https://nextech.ru/Manual.cshtml#auto
 ; Измените ИД_ящика (a73081d8-c19b-43b7-b9dc-a8715bcdd160) на свой, в зависимости от ИНН_отправителя (посмотрите в браузере) 
 ;uploadRule=*,*,https://doc.astral.ru/a73081d8-c19b-43b7-b9dc-a8715bcdd160/drafts
 
-; Загрузка в Сбис. Нет возможности автоматического переключения отправителя. У других операторов есть ИД_ящика
-; Рекомендуем использовать автоматическую загрузку через API.
-uploadRule=*,*,https://docs.saby.ru/page/docs-saby-outgoing
-; Демо СБИС
-;uploadRule=*,*,https://docs.sabyd.ru/page/docs-saby-outgoing
 
 
 ; Режим запуска браузера. Закомментируйте, если нужен обычный режим.

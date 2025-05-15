@@ -54,7 +54,7 @@ class PlaywrightAssistant
 
             // Получение параметров из конфигурации
             _chromePath = config.ContainsKey("chromePath") ? config["chromePath"] : null;
-           // _userDataDir = config.ContainsKey("userDataDir") ? config["userDataDir"] : null;
+            // _userDataDir = config.ContainsKey("userDataDir") ? config["userDataDir"] : null;
 
         }
     }
@@ -271,7 +271,7 @@ class PlaywrightAssistant
         {
             Console.Beep(1000, 500);
             clipboardText = "=" + senderInn + "," + receiverInn;
-            Console.WriteLine("!!!Не найдено подходящего правила загрузки для указанных ИНН." +
+            Console.WriteLine("\n!!!Не найдено подходящего правила загрузки для указанных ИНН." +
                 $"\nОткройте файл {cfg} и вставьте правило:\n" +
                 clipboardText +
                 "\nв нужное место. Сохраните изменения и закройте config.txt.");
@@ -297,7 +297,7 @@ class PlaywrightAssistant
             {
                 Console.WriteLine($"Не удалось открыть файл {cfg}: {ex.Message}");
             }
-            await Task.Delay(5555); 
+            await Task.Delay(5555);
             // Завершение программы с кодом 0x100
             Environment.Exit(0x100);
         }
@@ -323,7 +323,7 @@ class PlaywrightAssistant
             }
 
             // Проверка, совпадает ли текущий URL с ожидаемым
-            if (_page.Url != operUrl)
+            if (!_page.Url.Contains(operUrl))
             {
                 Console.WriteLine($"Текущий URL не совпадает с ожидаемым.\nОжидаемый: {operUrl}\nТекущий: {_page.Url}");
             }
@@ -393,10 +393,10 @@ class PlaywrightAssistant
             await WaitForTextAsync("С компьютера");
             await _page.ClickAsync("text=С компьютера");
             await Task.Delay(555);
-            SendKeys.SendWait("{ESC}");
-            await Task.Delay(555);
         }
         await UploadFileAsync(filePath);
+        SendKeys.SendWait("{ESC}");
+
 
         await WaitForTextAsync("Добавить");
         await WaitForTextAsync("Добавить");
@@ -462,9 +462,9 @@ class PlaywrightAssistant
             if (inputElement == null)
             {
                 // Ожидаем появления элемента по тексту
-                await _page.WaitForSelectorAsync("xpath=//span[contains(text(), 'Запросить подпись контрагента для всех документов')]");
+                var spanElement = await _page.WaitForSelectorAsync("xpath=//span[contains(text(), 'Запросить подпись контрагента для всех документов')]");
                 // Находим элемент по тексту с помощью XPath
-                var spanElement = await _page.QuerySelectorAsync("xpath=//span[contains(text(), 'Запросить подпись контрагента для всех документов')]");
+                //var spanElement = await _page.QuerySelectorAsync("xpath=//span[contains(text(), 'Запросить подпись контрагента для всех документов')]");
                 if (spanElement != null)
                 {
                     // Кликаем по элементу
@@ -472,10 +472,16 @@ class PlaywrightAssistant
                 }
 
                 // Ожидаем появления элемента, по которому нужно кликнуть
-                await _page.WaitForSelectorAsync("div[tid='CounteragentsSearch']");
+                //var clickableElement = await _page.QuerySelectorAsync("xpath=//span[contains(text(), 'Вводите')]");
+                var clickableElement = await _page.WaitForSelectorAsync(
+                    "div[data-tid='CounteragentsSearch'], div[tid='CounteragentsSearch']",
+                    new PageWaitForSelectorOptions
+                    {
+                        State = WaitForSelectorState.Attached,
+                        Timeout = 10000  // 10 секунд (можно настроить)
+                    }
+                );
 
-                // Находим элемент, по которому нужно кликнуть
-                var clickableElement = await _page.QuerySelectorAsync("div[tid='CounteragentsSearch']");
                 if (clickableElement != null)
                 {
                     // Кликаем по элементу

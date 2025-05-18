@@ -606,27 +606,37 @@ class PlaywrightAssistant
     // Метод для поиска и нажатия кнопки
     private async Task ClickButtonAsync(string buttonText)
     {
-        // Поиск всех кнопок с атрибутом data-tid='Button__root'
-        var buttons = await _page.QuerySelectorAllAsync("button[data-tid='Button__root']");
-
-        if (buttons.Count > 0)
+        var button = _page.Locator("text=" + buttonText);
+        if (button != null)
         {
-            // Перебор всех найденных кнопок
-            foreach (var button in buttons)
-            {
-                // Получение текста кнопки
-                var currentButtonText = await button.InnerTextAsync();
-
-                // Если текст кнопки совпадает с искомым, нажимаем её
-                if (currentButtonText == buttonText)
-                {
-                    await button.ClickAsync();
-                    Console.WriteLine($"Кнопка '{buttonText}' нажата.");
-                    return; // Выход из метода после нажатия
-                }
-            }
+            await button.ClickAsync();
+            Console.WriteLine($"Кнопка '{buttonText}' нажата.");
         }
+        else
 
-        Console.WriteLine($"Кнопка с текстом '{buttonText}' не найдена.");
+            /*
+                    // Поиск всех кнопок с атрибутом data-tid='Button__root'
+                    var buttons = await _page.QuerySelectorAllAsync("button[data-tid='Button__root']");
+
+                    if (buttons.Count > 0)
+                    {
+                        // Перебор всех найденных кнопок
+                        foreach (var button in buttons)
+                        {
+                            // Получение текста кнопки
+                            var currentButtonText = await button.InnerTextAsync();
+
+                            // Если текст кнопки совпадает с искомым, нажимаем её
+                            if (currentButtonText == buttonText)
+                            {
+                                await button.ClickAsync();
+                                Console.WriteLine($"Кнопка '{buttonText}' нажата.");
+                                return; // Выход из метода после нажатия
+                            }
+                        }
+                    }
+
+            */
+            Console.WriteLine($"Кнопка с текстом '{buttonText}' не найдена.");
     }
 }

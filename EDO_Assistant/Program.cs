@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.IO.Pipes;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 class Program
@@ -55,11 +56,12 @@ class Program
 
     private static void DisplaySettings()
     {
-        Console.WriteLine("ЭДО ассистент версия 1.5. Ожидание подключения...");
+        Console.WriteLine("ЭДО ассистент версия 1.6. Ожидание подключения...");
         Console.WriteLine("Доступные команды:");
         Console.WriteLine($"  x - Переключить режим браузера (Headless/Обычный) (Текущий: {(headless ? "Headless" : "Обычный")})");
         Console.WriteLine($"  s - Сохранять в черновиках/не сохранять (Текущий: {(saveDraft ? "Сохранять" : "Не сохранять")})");
         Console.WriteLine($"  n - Заполнение поля КА для не-XML документов (Текущий: {(autoFillNonXml ? "Включено" : "Отключено")})");
+        Console.WriteLine($"  c - Открыть файл конфигурации config.txt");
         Console.WriteLine();
     }
 
@@ -79,6 +81,38 @@ class Program
         {
             autoFillNonXml = !autoFillNonXml;
             Console.WriteLine($"\nЗаполнение поля КА для не-XML документов: {(autoFillNonXml ? "Включено" : "Отключено")}");
+        }
+        else if (keyChar == 'c' || keyChar == 'с')
+        {
+            OpenConfigFile();
+        }
+    }
+
+    private static void OpenConfigFile()
+    {
+        try
+        {
+            string configPath = "config.txt";
+            if (!File.Exists(configPath))
+            {
+                /*                // Создаем файл конфигурации с настройками по умолчанию, если он не существует
+                                File.WriteAllText(configPath,
+                                    "headless=false\n" +
+                                    "saveDraft=false\n" +
+                                    "autoFillNonXml=false");*/
+                Console.WriteLine("\nФайл config.txt не найден.");
+            }
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = configPath,
+                UseShellExecute = true
+            });
+            //Console.WriteLine("\nФайл конфигурации открыт.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"\nОшибка при открытии файла конфигурации: {ex.Message}");
         }
     }
 

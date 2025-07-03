@@ -86,6 +86,10 @@ class Program
         {
             OpenConfigFile();
         }
+        else if (keyChar == 'z')
+        {
+            OpenConfigFile();
+        }
     }
 
     private static void OpenConfigFile()

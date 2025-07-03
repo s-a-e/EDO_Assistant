@@ -639,4 +639,32 @@ class PlaywrightAssistant
             */
             Console.WriteLine($"Кнопка с текстом '{buttonText}' не найдена.");
     }
+
+
+    public async Task ClickButtonByTextAsync(IPage page, string url, string buttonText)
+    {
+        try
+        {
+            // Переход по указанному URL
+            await page.GotoAsync(url);
+            Console.WriteLine($"Успешно перешли по адресу: {url}");
+
+            // Поиск кнопки по тексту
+            var button = page.Locator($"text={buttonText}");
+
+            if (await button.CountAsync() > 0)
+            {
+                await button.ClickAsync();
+                Console.WriteLine($"Кнопка '{buttonText}' успешно нажата.");
+            }
+            else
+            {
+                Console.WriteLine($"Кнопка с текстом '{buttonText}' не найдена.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Произошла ошибка: {ex.Message}");
+        }
+    }
 }

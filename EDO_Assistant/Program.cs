@@ -4,16 +4,44 @@ using System.IO;
 using System.IO.Pipes;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Reflection;
+using System.Deployment.Application;
 
 class Program
 {
+    //static string AppName = "ЭДО ассистент версия 1.7";
     static bool headless = false, saveDraft = false, autoFillNonXml = false;
 
     private static ConcurrentQueue<string[]> _tasksQueue = new ConcurrentQueue<string[]>();
     private static bool _isRunning = true;
 
+    /// <summary>
+    /// Получает имя приложения из атрибута AssemblyTitle.
+    /// </summary>
+    private static string GetAssemblyTitle()
+    {
+        Assembly assembly = Assembly.GetExecutingAssembly();
+        AssemblyTitleAttribute attribute = assembly.GetCustomAttribute<AssemblyTitleAttribute>();
+        return attribute?.Title ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Получает версию, опубликованную через ClickOnce.
+    /// </summary>
+    private static string GetClickOnceVersion()
+    {
+        if (ApplicationDeployment.IsNetworkDeployed)
+        {
+            return ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+        }
+        return string.Empty;
+    }
+
     public static async Task Main(string[] args)
     {
+        // Проверяем обновление в самом начале
+        ClickOnceUpdater.CheckForUpdateAndRestart();
+
         // Получение параметров из конфигурации
         var config = PlaywrightAssistant.ReadConfig();
         headless = config.ContainsKey("headless") ? bool.Parse(config["headless"]) : false;
@@ -56,7 +84,33 @@ class Program
 
     private static void DisplaySettings()
     {
-        Console.WriteLine("ЭДО ассистент версия 1.6. Ожидание подключения...");
+        string appName = GetAssemblyTitle();
+        string appVersion = GetClickOnceVersion();
+
+        if (!string.IsNullOrEmpty(appName) && !string.IsNullOrEmpty(appVersion))
+        {
+            //Console.WriteLine($"Имя приложения: {appName}");
+            //Console.WriteLine($"Версия: {appVersion}");
+        }
+        else if (!string.IsNullOrEmpty(appName))
+        {
+            // Если не ClickOnce, выводим версию сборки
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            //Console.WriteLine($"Имя приложения: {appName}");
+            Console.WriteLine($"Версия сборки: {version}");
+        }
+        else
+        {
+            Console.WriteLine("Не удалось получить информацию о приложении.");
+        }
+
+
+        // Установка заголовка окна консоли
+        Console.Title = appName + " " + appVersion;
+
+        Console.WriteLine("Ожидание подключения...");
+
+        Console.WriteLine();
         Console.WriteLine("Доступные команды:");
         Console.WriteLine($"  x - Переключить режим браузера (Headless/Обычный) (Текущий: {(headless ? "Headless" : "Обычный")})");
         Console.WriteLine($"  s - Сохранять в черновиках/не сохранять (Текущий: {(saveDraft ? "Сохранять" : "Не сохранять")})");

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -205,9 +206,9 @@ class PlaywrightAssistant
                 Directory.CreateDirectory(_userDataDir);
             }
         }
-
-        var extensionPath1 = @"C:\EDO_Assistant\browserExtensions\Kontur"; // Путь к распакованному расширению
-        var extensionPath2 = @"C:\EDO_Assistant\browserExtensions\Sbis"; // Путь к распакованному расширению
+        var appDir =  Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        var extensionPath1 = appDir + @"\browserExtensions\Kontur"; // Путь к распакованному расширению
+        var extensionPath2 = appDir + @"\browserExtensions\Sbis"; // Путь к распакованному расширению
         // Запуск браузера с использованием пользовательского профиля
         _browser = await _playwright.Chromium.LaunchPersistentContextAsync(_userDataDir, new BrowserTypeLaunchPersistentContextOptions
         {
